@@ -1,0 +1,34 @@
+module Main exposing (main)
+
+type List a = Nil | Cons a (List a)
+
+append xs ys :: List a -> List a -> List a =
+  match xs with
+    Nil       -> ys
+    Cons x xs -> Cons x (append xs ys)
+
+filter p xs :: (Int -> Bool) -> List Int -> List Int =
+  match xs with
+    Nil       -> Nil
+    Cons x xs ->
+      if p x
+      then Cons x (filter p xs)
+      else filter p xs
+
+quickSort xs :: List Int -> List Int =
+  match xs with
+    Nil -> Nil
+    Cons p xs ->
+      let
+        less = filter (\x -> x < p) xs
+        greater = filter (\x -> !(x < p)) xs
+      in
+        append (quickSort less) (Cons p (quickSort greater))
+
+sum xs :: List Int -> Int =
+  match xs with
+    Nil       -> 0
+    Cons x xs -> x + sum xs
+
+main :: IO () = do
+  println (show (sum (quickSort (Cons 5 (Cons 2 (Cons 8 (Cons 1 (Cons 9 (Cons 3 Nil)))))))))

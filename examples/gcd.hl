@@ -1,0 +1,10 @@
+module Main exposing (main)
+
+gcd a b :: Int -> Int -> Int =
+  if b == 0
+  then a
+  else gcd b (a % b)
+
+main :: IO () = do
+  println (show (gcd 48 18))
+  println (show (gcd 1071 462))

@@ -1,0 +1,10 @@
+module Main exposing (main)
+
+fib n :: Int -> Int =
+  if n <= 1
+  then n
+  else fib (n - 1) + fib (n - 2)
+
+main :: IO () = do
+  println (show (fib 10))
+  println (show (fib 20))

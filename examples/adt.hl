@@ -1,0 +1,20 @@
+module Main exposing (main)
+
+type Option a = None | Some a
+
+type Tree a = Leaf a | Node (Tree a) (Tree a)
+
+treeSum t :: Tree Int -> Int =
+  match t with
+    Leaf x    -> x
+    Node l r  -> treeSum l + treeSum r
+
+unwrap opt :: Option Int -> Int =
+  match opt with
+    None   -> 0
+    Some x -> x
+
+main :: IO () = do
+  println (show (treeSum (Node (Leaf 1) (Node (Leaf 2) (Leaf 3)))))
+  println (show (unwrap (Some 42)))
+  println (show (unwrap None))

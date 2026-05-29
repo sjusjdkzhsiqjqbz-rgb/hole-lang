@@ -1,0 +1,28 @@
+module Main exposing (main)
+
+type List a = Nil | Cons a (List a)
+
+map f xs :: (a -> b) -> List a -> List b =
+  match xs with
+    Nil       -> Nil
+    Cons x xs -> Cons (f x) (map f xs)
+
+filter p xs :: (a -> Bool) -> List a -> List a =
+  match xs with
+    Nil       -> Nil
+    Cons x xs ->
+      if p x
+      then Cons x (filter p xs)
+      else filter p xs
+
+foldl f acc xs :: (b -> a -> b) -> b -> List a -> b =
+  match xs with
+    Nil       -> acc
+    Cons x xs -> foldl f (f acc x) xs
+
+sum xs :: List Int -> Int = foldl (\a b -> a + b) 0 xs
+
+main :: IO () = do
+  println (show (sum (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 Nil)))))))
+  println (show (sum (map (\x -> x * 2) (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 Nil))))))))
+  println (show (sum (filter (\x -> x > 2) (Cons 1 (Cons 2 (Cons 3 (Cons 4 (Cons 5 Nil))))))))

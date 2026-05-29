@@ -1,0 +1,19 @@
+module Main exposing (main)
+
+type List a = Nil | Cons a (List a)
+
+length xs :: List a -> Int =
+  match xs with
+    Nil       -> 0
+    Cons x xs -> 1 + length xs
+
+sum xs :: List Int -> Int =
+  match xs with
+    Nil       -> 0
+    Cons x xs -> x + sum xs
+
+list :: List Int = Cons 1 (Cons 2 (Cons 3 Nil))
+
+main :: IO () = do
+  println (show (length list))
+  println (show (sum list))

@@ -1,0 +1,25 @@
+module Main exposing (main)
+
+type Nat = Zero | Succ Nat
+
+natToInt n :: Nat -> Int =
+  match n with
+    Zero    -> 0
+    Succ n  -> 1 + natToInt n
+
+add a b :: Nat -> Nat -> Nat =
+  match a with
+    Zero    -> b
+    Succ a  -> Succ (add a b)
+
+mul a b :: Nat -> Nat -> Nat =
+  match a with
+    Zero    -> Zero
+    Succ a  -> add b (mul a b)
+
+three :: Nat = Succ (Succ (Succ Zero))
+four :: Nat = Succ (Succ (Succ (Succ Zero)))
+
+main :: IO () = do
+  println (show (natToInt (add three four)))
+  println (show (natToInt (mul three four)))

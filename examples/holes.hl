@@ -1,0 +1,6 @@
+module Main exposing (main)
+
+magic x :: Int -> Int = ???
+
+main :: IO () = do
+  println (show (magic 5))

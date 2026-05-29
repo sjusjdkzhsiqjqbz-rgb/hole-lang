@@ -1,0 +1,16 @@
+module Main exposing (main)
+
+factorial n :: Int -> Int =
+  if n <= 1
+  then 1
+  else n * factorial (n - 1)
+
+double :: Int -> Int = \x -> x * 2
+
+apply f x :: (Int -> Int) -> Int -> Int = f x
+
+main :: IO () = do
+  println (show (factorial 5))
+  println (show (double 21))
+  println (show (apply double 3))
+  println (show (1 + 2 * 3))

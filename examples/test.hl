@@ -1,0 +1,6 @@
+module Main exposing (main)
+
+add a b :: Int -> Int -> Int = a + b
+
+main :: IO () = do
+  println (show (add 1 2))
