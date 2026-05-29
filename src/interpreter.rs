@@ -208,6 +208,49 @@ impl Env {
             }
         }));
 
+        env.insert("charEq".into(), make_builtin("charEq", |args| match (&args[0], &args[1]) {
+            (Value::Char(a), Value::Char(b)) => Ok(Value::Bool(a == b)),
+            _ => Err(RuntimeError::Type{span:Span::new(0,0),msg:"charEq: expected Char Char".into()}),
+        }));
+        env.insert("charIsDigit".into(), make_builtin("charIsDigit", |args| match &args[0] {
+            Value::Char(c) => Ok(Value::Bool(c.is_ascii_digit())),
+            _ => Err(RuntimeError::Type{span:Span::new(0,0),msg:"charIsDigit: expected Char".into()}),
+        }));
+        env.insert("charIsSpace".into(), make_builtin("charIsSpace", |args| match &args[0] {
+            Value::Char(c) => Ok(Value::Bool(c.is_whitespace())),
+            _ => Err(RuntimeError::Type{span:Span::new(0,0),msg:"charIsSpace: expected Char".into()}),
+        }));
+        env.insert("charToInt".into(), make_builtin("charToInt", |args| match &args[0] {
+            Value::Char(c) if c.is_ascii_digit() => Ok(Value::Int((*c as u8 - b'0') as i64)),
+            Value::Char(c) => Ok(Value::Int(*c as i64)),
+            _ => Err(RuntimeError::Type{span:Span::new(0,0),msg:"charToInt: expected Char".into()}),
+        }));
+        env.insert("intToChar".into(), make_builtin("intToChar", |args| match &args[0] {
+            Value::Int(n) if (0..=9).contains(n) => Ok(Value::Char((*n as u8 + b'0') as char)),
+            Value::Int(n) if (0..=127).contains(n) => Ok(Value::Char(*n as u8 as char)),
+            _ => Err(RuntimeError::Type{span:Span::new(0,0),msg:"intToChar: expected Int".into()}),
+        }));
+        env.insert("strFromList".into(), make_builtin("strFromList", |args| {
+            fn collect_chars(v: &Value) -> Result<String, RuntimeError> {
+                match v {
+                    Value::Tag(name, vals) if name == "Nil" && vals.is_empty() => Ok(String::new()),
+                    Value::Tag(name, vals) if name == "Cons" && vals.len() == 2 => {
+                        let head = match &vals[0] {
+                            Value::Char(c) => *c,
+                            _ => return Err(RuntimeError::Type{span:Span::new(0,0),msg:"strFromList: expected List Char".into()}),
+                        };
+                        let tail = collect_chars(&vals[1])?;
+                        let mut s = String::new();
+                        s.push(head);
+                        s.push_str(&tail);
+                        Ok(s)
+                    }
+                    _ => Err(RuntimeError::Type{span:Span::new(0,0),msg:"strFromList: expected List Char".into()}),
+                }
+            }
+            Ok(Value::String(collect_chars(&args[0])?))
+        }));
+
         env.insert("Nil".into(), Value::Tag("Nil".into(), vec![]));
         env.insert("None".into(), Value::Tag("None".into(), vec![]));
         env

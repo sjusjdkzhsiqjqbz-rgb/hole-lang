@@ -1,6 +1,0 @@
-module Main exposing (main)
-
-type Option a = None | Some a
-
-main :: IO () = do
-  println (show 42)

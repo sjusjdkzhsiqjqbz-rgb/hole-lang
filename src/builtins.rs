@@ -73,6 +73,26 @@ impl Default for BuiltinCtx {
             )),
         );
 
+        values.insert("charEq".into(), Scheme::mono(Type::func(
+            Type::char(), Type::func(Type::char(), Type::bool()),
+        )));
+        values.insert("charIsDigit".into(), Scheme::mono(Type::func(
+            Type::char(), Type::bool(),
+        )));
+        values.insert("charIsSpace".into(), Scheme::mono(Type::func(
+            Type::char(), Type::bool(),
+        )));
+        values.insert("charToInt".into(), Scheme::mono(Type::func(
+            Type::char(), Type::int(),
+        )));
+        values.insert("intToChar".into(), Scheme::mono(Type::func(
+            Type::int(), Type::char(),
+        )));
+        values.insert("strFromList".into(), Scheme::mono(Type::func(
+            Type::tcon("List".into(), vec![Type::char()]),
+            Type::string(),
+        )));
+
         BuiltinCtx { types, values, adts }
     }
 }

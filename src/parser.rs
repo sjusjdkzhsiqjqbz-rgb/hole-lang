@@ -497,22 +497,27 @@ impl Parser {
     }
 
     fn parse_app(&mut self) -> Result<Expr, ParseError> {
-        let mut expr = self.parse_atom()?;
-        let current_line = expr.span().line;
+        let func = self.parse_atom()?;
+        let mut args = vec![];
+        let current_line = func.span().line;
         while self.is_atom_start() {
             let next_span = self.peek_span();
             if next_span.line != current_line {
                 break;
             }
-            let arg = self.parse_atom()?;
-            let span = expr.span();
-            expr = Expr::App {
-                func: Box::new(expr),
-                args: vec![arg],
-                span,
-            };
+            args.push(self.parse_atom()?);
         }
-        Ok(expr)
+
+        if args.is_empty() {
+            Ok(func)
+        } else {
+            let span = func.span();
+            Ok(Expr::App {
+                func: Box::new(func),
+                args,
+                span,
+            })
+        }
     }
 
     fn parse_atom(&mut self) -> Result<Expr, ParseError> {

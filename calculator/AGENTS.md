@@ -93,6 +93,13 @@ main :: IO () = do
 | `println` | `String -> IO ()` | Print line with newline |
 | `print` | `String -> IO ()` | Print without newline |
 | `readLine` | `IO String` | Read stdin line |
+| `strUncons` | `String -> Option (Char, String)` | Pop first char, returns rest |
+| `charEq` | `Char -> Char -> Bool` | Char equality |
+| `charIsDigit` | `Char -> Bool` | Is '0'..'9'? |
+| `charIsSpace` | `Char -> Bool` | Is whitespace? |
+| `charToInt` | `Char -> Int` | Digit char to int (e.g. '7'→7) |
+| `intToChar` | `Int -> Char` | Int 0-9 to digit char |
+| `strFromList` | `List Char -> String` | Convert char list to string |
 
 ### Operators
 
@@ -169,72 +176,22 @@ error
 
 ### Tips
 
-1. **String as List Char**: Since strings can't be indexed, build a `readChars` function that stores each `readLine` result as a `CharList`. But you can't iterate chars either. Instead: use `String` as an opaque token, and handle only integer literals (digits `0-9`). Split by examining the string via pattern matching on known operator characters? That's impossible in Hole.
+Use `strUncons` to pop characters from the input string one at a time. Use `charIsDigit` to accumulate digit sequences into numbers. Use `charEq` to detect operators. Use `charToInt` and `intToChar` for digit↔int conversion. Use `strFromList` to convert a `List Char` back to `String` for printing.
 
-   **CORRECT APPROACH**: Parse ONE integer at a time from `readLine`, then read an operator, then another integer. Or: read the whole expression as a single string and use a helper that scans character-by-character by converting to a list.
-
-   Since Hole has no `String -> List Char` builtin, you need to build a **char-by-char reader**. The trick: `readLine` returns the full input. Then you can process it by matching on known patterns. Since you can't deconstruct `String`, you'll need a pre-processing step.
-
-   **PRACTICAL APPROACH**: Use `readLine` to get a line. Since you can't split strings, pre-process the input in the compiler or use a workaround: read NUMBERS and OPERATORS as separate `readLine` calls? That's terrible UX.
-
-   **ACTUAL SOLUTION**: Add `strLen :: String -> Int`, `strAt :: String -> Int -> Char` as builtins, OR use a tokenization approach in the compiler.
-
-   **SIMPLEST WORKING APPROACH**: The calculator reads Polish notation (prefix) instead of infix. E.g. `+ 2 (* 3 4)` instead of `2 + 3 * 4`. This eliminates the need for string parsing — `readLine` returns tokens separated by spaces? No, `readLine` returns the whole line as one string.
-
-   **THE REAL APPROACH**: Since you can't parse strings character-by-character in pure Hole, implement a simple tokenizer in the **compiler** (add a `tokenize :: String -> List Token` builtin), OR:
-
-   Use the fact that you can **pattern match on strings as whole values** by wrapping them in an ADT. Pre-tokenize by scanning: since `readLine` gives you a `String`, and you can't inspect it, you need the runtime to do it.
-
-   **BUILT-IN SOLUTION**: Write the tokenizer in Rust as a new builtin `parseInput :: String -> Maybe Expr` and add it to the interpreter. But the task says to write it IN HOLE.
-
-   **FINAL ANSWER**: Use a **predefined ADT** for expressions. The user types in Hole syntax directly into the REPL. The calculator is itself a Hole program — the user interacts with it by typing Hole expressions. But that defeats the purpose.
-
-   **OK REAL ANSWER**: Add a `split :: String -> String -> List String` builtin to the compiler. Or: the calculator takes the FULL input string and processes it character by character by using `stringToChars` which doesn't exist.
-
-   **PRACTICAL ESCAPE HATCH**: Add ONE builtin function to the compiler: `strUncons :: String -> Maybe (Char, String)`. This lets you consume one char at a time. From this, you can build a full tokenizer. If that's too much, just add `stringToList :: String -> List Char`.
-
-   **I'll document that the agent should extend the compiler with `strUncons` as a builtin.** This is a reasonable LLM-first approach: the language provides holes, the agent fills them by extending builtins when needed.
-
-### Extending the Compiler
-
-Add to `src/builtins.rs`:
-
-```rust
-values.insert("strUncons".into(), Scheme::mono(Type::func(
-    Type::string(),
-    Type::func(Type::option(Type::tvar("a".into())), Type::string()), // approximated
-)));
+```haskell
+-- example: check if first char is '+'
+isPlus s :: String -> Bool =
+  match strUncons s with
+    None   -> false
+    Some t -> charEq '+' (fst t)
 ```
 
-And to `src/interpreter.rs` in `Env::with_builtins()`:
+Since `Option` is not built-in, define your own:
 
-```rust
-env.insert("strUncons".into(), make_builtin("strUncons", |args| {
-    match &args[0] {
-        Value::String(s) => {
-            let mut chars = s.chars();
-            match chars.next() {
-                Some(c) => {
-                    let rest: String = chars.collect();
-                    Ok(Value::Tag("Some".into(), vec![
-                        Value::Tag("Tuple".into(), vec![
-                            Value::Char(c),
-                            Value::String(rest),
-                        ])
-                    ]))
-                }
-                None => Ok(Value::Tag("None".into(), vec![])),
-            }
-        }
-        _ => Err(RuntimeError::Type {
-            span: Span::new(0, 0),
-            msg: "strUncons: expected String".into(),
-        }),
-    }
-}));
+```haskell
+type Option a = None | Some a
+type List a = Nil | Cons a (List a)
 ```
-
-This returns `Some (c, rest_string)` or `None` for empty strings.
 
 ---
 
